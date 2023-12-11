@@ -46,8 +46,8 @@ app.post('/updateGithub', authenticate, (req, res) => {
         else{
             const commitMessage = `[jasbob-leetcode-bot] automated upload of <${difficulty}> ${formattedTitle}`
             exec(`git commit -m "${commitMessage}"`, options, (error, stdout, stderr)=>{
-                if (error || stderr){
-                    console.error("uh oh stinky 2", error, stderr )
+                if (error ){
+                    console.error("uh oh stinky 2", error )
                     res.status(500).send('Error executing command');
                 }
                 else{
