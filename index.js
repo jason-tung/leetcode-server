@@ -33,52 +33,41 @@ app.post('/updateGithub', authenticate, (req, res) => {
           console.error('Error writing file:', err);
         } else {
           console.log('File written successfully.');
+          const options = {
+            cwd: path.join(homeDir, 'leetcode')
+        }
+        exec('git add .', options, (error, stdout, stderr)=>{
+            if (error || stderr){
+                console.error("uh oh stinky 1", error, stderr )
+                res.status(500).send('Error executing command');
+            }
+            else{
+                const commitMessage = `[jasbob-leetcode-bot] automated upload of <${difficulty}> ${formattedTitle}`       
+                // const commitMessage = `[jasbob-leetcode-bot] what the flip ?`                  
+                exec(`git commit -m '${commitMessage}'`, options, (error, stdout, stderr)=>{
+                    if (error || stderr){
+                        console.error("uh oh stinky 2", stdout, error, stderr )
+                        res.status(500).send('Error executing command');
+                    }
+                    else{
+                        exec("git push", options, (error, stdout, stderr)=>{
+                            if (error ){
+                                // push writes to stderror 
+                                console.error("uh oh stinky 3", error )
+                                res.status(500).send('Error executing command');
+                            }
+                            else{
+                                console.log("omg we uploaded!?!")
+                                res.status(200).send(`uploaded [${difficulty}] ${formattedTitle}`)
+                            }
+                        })
+                    }
+                })
+            }
+        })
         }
       });
-    const options = {
-        cwd: path.join(homeDir, 'leetcode')
-    }
-    exec('git add .', options, (error, stdout, stderr)=>{
-        if (error || stderr){
-            console.error("uh oh stinky 1", error, stderr )
-            res.status(500).send('Error executing command');
-        }
-        else{
-            const commitMessage = `[jasbob-leetcode-bot] automated upload of <${difficulty}> ${formattedTitle}`
-            exec(`git commit -m "${commitMessage}"`, options, (error, stdout, stderr)=>{
-                if (error ){
-                    console.error("uh oh stinky 2", error )
-                    res.status(500).send('Error executing command');
-                }
-                else{
-                    exec("git push", options, (error, stdout, stderr)=>{
-                        if (error ){
-                            // push writes to stderror 
-                            console.error("uh oh stinky 3", error )
-                            res.status(500).send('Error executing command');
-                        }
-                        else{
-                            console.log("omg we uploaded!?!")
-                            res.stats(200).send(`uploaded [${difficulty}] ${formattedTitle}`)
-                        }
-                    })
-                }
-            })
-        }
-    })
-    
-    // exec('echo hello wrld', (error, stdout, stderr) => {
-    //     if (error) {
-    //         console.error(`Error executing command: ${error.message}`);
-    //         return res.status(500).send('Error executing command');
-    //     } else if (stderr) {
-    //         console.error(`Command error: ${stderr}`);
-    //         return res.status(500).send('Command error');
-    //     } else {
-    //         console.log(`Command output: ${stdout}`);
-    //         res.status(200).send('Command executed successfully');
-    //     }
-    // });
+
 });
 
 const PORT = 3001;
