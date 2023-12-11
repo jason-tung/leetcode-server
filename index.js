@@ -1,9 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import { exec } from 'child_process';
-import { config } from 'dotenv';
-
-config();
+import 'dotenv/config';
 
 const app = express();
 app.use(bodyParser.json());
