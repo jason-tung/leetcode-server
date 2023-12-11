@@ -20,6 +20,7 @@ const authenticate = (req, res, next) => {
 app.get('', (req, res) => res.send('hi'));
 
 app.post('/updateGithub', authenticate, (req, res) => {
+    console.log(req.body);
     exec('echo hello wrld', (error, stdout, stderr) => {
         if (error) {
             console.error(`Error executing command: ${error.message}`);
