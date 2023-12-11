@@ -13,6 +13,7 @@ const authenticate = (req, res, next) => {
     if (apiKey === expectedKey) {
         next();
     } else {
+        console.log('unauth request', req);
         return res.status(401).send('Unauthorized');
     }
 };
