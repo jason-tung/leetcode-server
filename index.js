@@ -29,7 +29,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const homeDir = os.homedir();
 const resourceDir = path.join(homeDir, 'leetcode-server', 'public')
 
-app.use('/public', express.static('public'));
+app.use('/public', express.static('public')); // works
 
 const authenticate = (req, res, next) => {
     const { apiKey } = req.body;
@@ -101,7 +101,7 @@ app.post('/updateGithub', authenticate, (req, res) => {
                                         "fields": [
                                           {
                                             "name": `[jasbob-leetcode-bot] Automated Upload Triggered!`,
-                                            "value": `Uploaded <${difficulty}> ${formattedTitle}`
+                                            "value": `Uploaded <${difficulty}> ${formattedTitle} [(here)](https://github.com/jason-tung/leetcode)`
                                           }
                                         ],
                                         "thumbnail": {
