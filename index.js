@@ -105,7 +105,7 @@ app.post('/updateGithub', authenticate, (req, res) => {
                                           }
                                         ],
                                         "thumbnail": {
-                                          "url": "http://jasontung.me:3001/public/punch.png"
+                                          "url": `http://jasontung.me:3001/public/punch.png?${Math.random()}=${Math.random()}`
                                         },
                                         "footer": {
                                           "text": `powered by jasbob-bot ・ ${getCurrentTime()}`,
