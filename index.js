@@ -122,7 +122,7 @@ app.post('/updateGithub', authenticate, (req, res) => {
                                     body: JSON.stringify(data)
                                   })
                                 console.log("omg we uploaded!?!")
-                                res.status(200).send(`uploaded [${difficulty}] ${formattedTitle}`)
+                                res.status(200).send(`${formattedTitle}`)
                             }
                         })
                     }
