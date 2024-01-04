@@ -42,13 +42,14 @@ const authenticate = (req, res, next) => {
     }
 };
 
-const getRandomImage = () => {
+const getRandomImage = (key) => {
   const files = fs.readdirSync(resourceDir);
-  const randomIndex = Math.floor(Math.random() * files.length);
+  key = key && key < 1 ? key : Math.random();
+  const randomIndex = Math.floor(key * files.length);
   return files[randomIndex];
 };
 app.get('/randomimage', (req, res) => {
-  const randomImage = getRandomImage();
+  const randomImage = getRandomImage(req.query.key);
   const imagePath = path.join(resourceDir, randomImage);
   
   res.sendFile(imagePath);
@@ -113,7 +114,7 @@ app.post('/updateGithub', authenticate, (req, res) => {
                                           }
                                         ],
                                         "thumbnail": {
-                                          "url": `http://jasontung.me:3001/public/punch.png?${Math.random()}=${Math.random()}`
+                                          "url": `http://jasontung.me:3001/randomimage?key=${Math.random()}`
                                         },
                                         "footer": {
                                           "text": `powered by jasbob-bot ・ ${getCurrentTime()}`,
