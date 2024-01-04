@@ -42,9 +42,17 @@ const authenticate = (req, res, next) => {
     }
 };
 
-
-
-
+const getRandomImage = () => {
+  const files = fs.readdirSync(resourceDir);
+  const randomIndex = Math.floor(Math.random() * files.length);
+  return files[randomIndex];
+};
+app.get('/randomimage', (req, res) => {
+  const randomImage = getRandomImage();
+  const imagePath = path.join(resourceDir, randomImage);
+  
+  res.sendFile(imagePath);
+});
 
 app.get('/images/:item', (req, res) => {
   if (req.params.item == "punch"){

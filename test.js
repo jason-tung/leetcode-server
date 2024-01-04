@@ -1,11 +1,14 @@
-import express from 'express'
-const app = express();
-const PORT = 3001;
- 
-app.get('/', (req, res) => {
-    res.send('Hello World!');
-});
+import os from 'os';
+import path from 'path';
+import {dirname} from 'path'
+import fs from 'fs'
 
-app.use(express.static('public'));
+const homeDir = os.homedir();
+const resourceDir = path.join(homeDir, 'leetcode-server', 'public')
 
-app.listen(PORT, () => console.log(`Server listening on port: ${PORT}`));
+
+fs.readdir(resourceDir, (err, files) => {
+files.forEach(file => {
+console.log(file)
+})
+})
