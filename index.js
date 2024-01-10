@@ -120,7 +120,7 @@ app.post('/updateGithub', authenticate, (req, res) => {
                                             res.status(500).send(
                                                 'Error executing command'
                                             );
-                                        } else if (stdout.length() > 0) {
+                                        } else if (stdout.length > 0) {
                                             console.log('stdout log');
                                             console.log(stdout);
                                             const commit =
