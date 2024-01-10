@@ -63,6 +63,13 @@ app.get('/randomimage', (req, res) => {
 
 app.get('/', (req, res) => res.send('hi'));
 
+// body should look like:
+// body: JSON.stringify({
+//     difficulty,
+//     formattedTitle,
+//     fileText,
+//     apiKey: password,
+// }),
 app.post('/updateGithub', authenticate, (req, res) => {
     console.log(req.body);
     const { difficulty, formattedTitle, fileText } = req.body;
