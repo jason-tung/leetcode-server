@@ -154,6 +154,9 @@ app.post('/updateGithub', authenticate, (req, res) => {
                                             console.log(
                                                 "hmm something bad happened! here's log of stdout and stderr"
                                             );
+                                            console.log(
+                                                stdout.includes('github.com')
+                                            );
                                             console.log(stdout, stderr);
                                         }
                                     }
