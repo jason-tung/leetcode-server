@@ -111,6 +111,7 @@ app.post('/updateGithub', authenticate, (req, res) => {
                                     'git push',
                                     options,
                                     (error, stdout, stderr) => {
+                                        console.log(stdout);
                                         if (error) {
                                             // push writes to stderror
                                             console.error(
