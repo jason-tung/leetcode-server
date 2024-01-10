@@ -120,9 +120,9 @@ app.post('/updateGithub', authenticate, (req, res) => {
                                             res.status(500).send(
                                                 'Error executing command'
                                             );
-                                        } else if (
-                                            stdout.includes('github.com')
-                                        ) {
+                                        } else if (stdout.length() > 0) {
+                                            console.log('stdout log');
+                                            console.log(stdout);
                                             const commit =
                                                 extractLatestCommit(stdout);
                                             const data = {
@@ -159,12 +159,8 @@ app.post('/updateGithub', authenticate, (req, res) => {
                                             );
                                         } else {
                                             console.log(
-                                                "hmm something bad happened! here's log of stdout and stderr"
+                                                'hmm something bad happened!'
                                             );
-                                            console.log(
-                                                stdout.includes('github.com')
-                                            );
-                                            console.log(stdout, stderr);
                                         }
                                     }
                                 );
