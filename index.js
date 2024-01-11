@@ -1,6 +1,6 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import { exec } from 'child_process';
+import { exec, execSync, spawnSync } from 'child_process';
 
 import fetch from 'node-fetch';
 import os from 'os';
@@ -24,7 +24,7 @@ const getCurrentTime = () => {
 };
 
 const extractLatestCommit = (s) => {
-    return s.match(/(?<=[ \t]+[a-z0-9]+\.\.)[a-z0-9]+/)[0];
+    return s.match(/(?<=[ \t]+[a-z0-9]+\.\.)[a-z0-9]+/)?.[0];
 };
 
 const app = express();
@@ -71,7 +71,7 @@ app.get('/', (req, res) => res.send('hi'));
 //     apiKey: password,
 // }),
 app.post('/updateGithub', authenticate, (req, res) => {
-    console.log(req.body);
+    // console.log(req.body);
     const { difficulty, formattedTitle, fileText } = req.body;
     const filePath = path.join(
         homeDir,
@@ -79,99 +79,61 @@ app.post('/updateGithub', authenticate, (req, res) => {
         difficulty,
         `${formattedTitle}.py`
     );
-    fs.writeFile(filePath, fileText, (err) => {
-        if (err) {
-            console.error('Error writing file:', err);
-        } else {
-            console.log('File written successfully.');
-            const options = {
-                cwd: path.join(homeDir, 'leetcode'),
-            };
-            exec('git add .', options, (error, stdout, stderr) => {
-                if (error || stderr) {
-                    console.error('uh oh stinky 1', error, stderr);
-                    res.status(500).send('Error executing command');
-                } else {
-                    const commitMessage = `[jasbob-leetcode-bot] automated upload of <${difficulty}> ${formattedTitle}`;
-                    // const commitMessage = `[jasbob-leetcode-bot] what the flip ?`
-                    exec(
-                        `git commit -m '${commitMessage}'`,
-                        options,
-                        (error, stdout, stderr) => {
-                            if (error || stderr) {
-                                console.error(
-                                    'uh oh stinky 2',
-                                    stdout,
-                                    error,
-                                    stderr
-                                );
-                                res.status(500).send('Error executing command');
-                            } else {
-                                exec(
-                                    'git push',
-                                    options,
-                                    (error, stdout, stderr) => {
-                                        console.log(stdout);
-                                        if (error) {
-                                            // push writes to stderror
-                                            console.error(
-                                                'uh oh stinky 3',
-                                                error
-                                            );
-                                            res.status(500).send(
-                                                'Error executing command'
-                                            );
-                                        } else if (stdout.length > 0) {
-                                            console.log('stdout log');
-                                            console.log(stdout);
-                                            const commit =
-                                                extractLatestCommit(stdout);
-                                            const data = {
-                                                embeds: [
-                                                    {
-                                                        fields: [
-                                                            {
-                                                                name: `[jasbob-leetcode-bot] Automated Upload Triggered!`,
-                                                                value: `Uploaded <${difficulty}> ${formattedTitle} [(here)](https://github.com/jason-tung/leetcode/commit/${commit})`,
-                                                            },
-                                                        ],
-                                                        thumbnail: {
-                                                            url: `http://jasontung.me:3001/randomimage?key=${Math.random()}`,
-                                                        },
-                                                        footer: {
-                                                            text: `powered by jasbob-bot ・ ${getCurrentTime()}`,
-                                                            icon_url:
-                                                                'https://avatars.githubusercontent.com/u/153464167?v=4',
-                                                        },
-                                                    },
-                                                ],
-                                            };
-                                            fetch(process.env.WEBHOOK, {
-                                                method: 'POST',
-                                                headers: {
-                                                    'Content-Type':
-                                                        'application/json',
-                                                },
-                                                body: JSON.stringify(data),
-                                            });
-                                            console.log('omg we uploaded!?!');
-                                            res.status(200).send(
-                                                `${formattedTitle}`
-                                            );
-                                        } else {
-                                            console.log(
-                                                'hmm something bad happened!'
-                                            );
-                                        }
-                                    }
-                                );
-                            }
-                        }
-                    );
-                }
-            });
-        }
-    });
+    try {
+        fs.writeFileSync(filePath, fileText);
+        console.log('File written successfully.');
+        const options = {
+            cwd: path.join(homeDir, 'leetcode'),
+            encoding: 'UTF-8',
+        };
+        execSync('git add .', options);
+        console.log('added files');
+        const commitMessage = `[jasbob-leetcode-bot] automated upload of <${difficulty}> ${formattedTitle}`;
+        execSync(`git commit -m '${commitMessage}'`, options);
+        console.log('committed files');
+        const execOutput = spawnSync('git', ['push'], {
+            ...options,
+            maxBuffer: 1024 * 1024 * 100,
+        });
+        const output = execOutput.output.join(' ');
+        console.log('pushed files');
+        console.log(`output from git push: %${output}%`);
+        const commit = extractLatestCommit(output);
+        console.log('commit', commit);
+        const url_ending = commit ? `commit/${commit}` : '';
+        const data = {
+            embeds: [
+                {
+                    fields: [
+                        {
+                            name: `[jasbob-leetcode-bot] Automated Upload Triggered!`,
+                            value: `Uploaded <${difficulty}> ${formattedTitle} [(here)](https://github.com/jason-tung/leetcode/${url_ending})`,
+                        },
+                    ],
+                    thumbnail: {
+                        url: `http://jasontung.me:3001/randomimage?key=${Math.random()}`,
+                    },
+                    footer: {
+                        text: `powered by jasbob-bot ・ ${getCurrentTime()}`,
+                        icon_url:
+                            'https://avatars.githubusercontent.com/u/153464167?v=4',
+                    },
+                },
+            ],
+        };
+        fetch(process.env.WEBHOOK, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
+        console.log('omg we uploaded!?!');
+        res.status(200).send(`${formattedTitle}`);
+    } catch (err) {
+        console.error('Error writing file:', err);
+        res.status(500).send('Error executing command');
+    }
 });
 
 const PORT = 3001;

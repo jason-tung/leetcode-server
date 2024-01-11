@@ -2,19 +2,17 @@ import os from 'os';
 import path from 'path';
 import { dirname } from 'path';
 import fs from 'fs';
-import { exec } from 'child_process';
+import { execSync } from 'child_process';
 
 const homeDir = os.homedir();
 const resourceDir = path.join(homeDir, 'leetcode-server', 'public');
 const options = {
-    cwd: path.join(homeDir, 'projects', 'leetcode'),
+    cwd: path.join(homeDir, 'leetcode'),
+    encoding: 'UTF-8',
 };
-exec(`ls`, options, (error, stdout, stderr) => {
-    if (error || stderr) {
-        console.error('uh oh stinky 2', stdout, error, stderr);
-    }
-    console.log(stdout);
-});
+const r = execSync(`ls -la easy`, options);
+
+console.log(r);
 
 const extractLatestCommit = (s) => {
     return s.match(/(?<=[ \t]+[a-z0-9]+\.\.)[a-z0-9]+/)[0];
@@ -30,4 +28,4 @@ remote: Resolving deltas: 100% (2/2), completed with 2 local objects.
 To github.com:jason-tung/leetcode-archiver.git
    b638a63..5bdec10  main -> main`;
 
-console.log(extractLatestCommit(sample));
+// console.log(extractLatestCommit(sample));
