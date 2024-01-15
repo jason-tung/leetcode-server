@@ -86,6 +86,11 @@ app.post('/updateGithub', authenticate, (req, res) => {
             cwd: path.join(homeDir, 'leetcode'),
             encoding: 'UTF-8',
         };
+        spawnSync('git', ['pull'], {
+            ...options,
+            maxBuffer: 1024 * 1024 * 100,
+        });
+        console.log('execute pull');
         execSync('git add .', options);
         console.log('added files');
         const commitMessage = `[jasbob-leetcode-bot] automated upload of <${difficulty}> ${formattedTitle}`;
