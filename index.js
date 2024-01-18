@@ -1,11 +1,10 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import { exec, execSync, spawnSync } from 'child_process';
+import { execSync, spawnSync } from 'child_process';
 
 import fetch from 'node-fetch';
 import os from 'os';
 import path from 'path';
-import { dirname } from 'path';
 import fs from 'fs';
 import 'dotenv/config';
 
@@ -72,12 +71,14 @@ app.get('/', (req, res) => res.send('hi'));
 // }),
 app.post('/updateGithub', authenticate, (req, res) => {
     // console.log(req.body);
-    const { difficulty, formattedTitle, fileText } = req.body;
+    const { difficulty, formattedTitle, suffix, fileText } = req.body;
+    const titleWithSuffix =
+        suffix.length > 0 ? formattedTitle + suffix : formattedTitle;
     const filePath = path.join(
         homeDir,
         'leetcode',
         difficulty,
-        `${formattedTitle}.py`
+        `${titleWithSuffix}.py`
     );
     try {
         fs.writeFileSync(filePath, fileText);
@@ -93,7 +94,7 @@ app.post('/updateGithub', authenticate, (req, res) => {
         console.log('execute pull');
         execSync('git add .', options);
         console.log('added files');
-        const commitMessage = `[jasbob-leetcode-bot] automated upload of <${difficulty}> ${formattedTitle}`;
+        const commitMessage = `[jasbob-leetcode-bot] automated upload of <${difficulty}> ${titleWithSuffix}`;
         execSync(`git commit -m '${commitMessage}'`, options);
         console.log('committed files');
         const execOutput = spawnSync('git', ['push'], {
@@ -109,10 +110,11 @@ app.post('/updateGithub', authenticate, (req, res) => {
         const data = {
             embeds: [
                 {
+                    color: 'Green',
                     fields: [
                         {
                             name: `[jasbob-leetcode-bot] Automated Upload Triggered!`,
-                            value: `Uploaded <${difficulty}> ${formattedTitle} [(here)](https://github.com/jason-tung/leetcode/${url_ending})`,
+                            value: `Uploaded <${difficulty}> ${titleWithSuffix} [(here)](https://github.com/jason-tung/leetcode/${url_ending})`,
                         },
                     ],
                     thumbnail: {
@@ -134,7 +136,7 @@ app.post('/updateGithub', authenticate, (req, res) => {
             body: JSON.stringify(data),
         });
         console.log('omg we uploaded!?!');
-        res.status(200).send(`${formattedTitle}`);
+        res.status(200).send(`${titleWithSuffix}`);
     } catch (err) {
         console.error('Error writing file:', err);
         res.status(500).send('Error executing command');
