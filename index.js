@@ -140,7 +140,7 @@ app.post('/updateGithub', authenticate, (req, res) => {
                 problemName,
                 suffix,
                 url,
-                action: suffix.length > 0 ? 'write_sol' : 'write_alt_sol',
+                action: suffix.length > 0 ? 'write_alt_sol' : 'write_sol',
                 rewrite: fileExists,
                 timestamp: new Date(),
             });
