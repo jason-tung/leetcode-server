@@ -8,6 +8,22 @@ import path from 'path';
 import fs from 'fs';
 import 'dotenv/config';
 
+import { initializeApp, applicationDefault, cert } from 'firebase-admin/app';
+
+import { getFirestore } from 'firebase-admin/firestore';
+
+import serviceAccount from './firebase-key.json' assert { type: 'json' };
+
+initializeApp({
+    credential: cert(serviceAccount),
+});
+
+const db = getFirestore();
+
+const log = (...args) => {
+    if (process.env.PRINTDEV == 'true') console.log(...args);
+};
+
 const getCurrentTime = () => {
     const currentDate = new Date(
         new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })
@@ -32,7 +48,9 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const homeDir = os.homedir();
-const resourceDir = path.join(homeDir, 'leetcode-server', 'public');
+const resourceDir = process.env.RESOURCEDIR
+    ? path.join(homeDir, process.env.RESOURCEDIR)
+    : path.join(homeDir, 'leetcode-server', 'public');
 
 app.use('/public', express.static('public')); // works
 
@@ -70,75 +88,96 @@ app.get('/', (req, res) => res.send('hi'));
 //     apiKey: password,
 // }),
 app.post('/updateGithub', authenticate, (req, res) => {
-    // console.log(req.body);
-    const { difficulty, formattedTitle, suffix, fileText } = req.body;
+    const { difficulty, formattedTitle, suffix, fileText, url } = req.body;
     const titleWithSuffix =
-        suffix.length > 0 ? formattedTitle + suffix : formattedTitle;
-    const filePath = path.join(
-        homeDir,
-        'leetcode',
-        difficulty,
-        `${titleWithSuffix}.py`
-    );
+        suffix.length > 0 ? `${formattedTitle}-${suffix}` : formattedTitle;
+    let basePath = homeDir;
+    if (process.env.WORKDIR) {
+        basePath = path.join(homeDir, process.env.WORKDIR);
+    } else {
+        basePath = path.join(homeDir, 'leetcode');
+    }
+    let filePath = path.join(basePath, difficulty, `${titleWithSuffix}.py`);
     try {
+        const fileExists = fs.existsSync(filePath);
         fs.writeFileSync(filePath, fileText);
-        console.log('File written successfully.');
+        log('File written successfully.');
         const options = {
-            cwd: path.join(homeDir, 'leetcode'),
+            cwd: basePath,
             encoding: 'UTF-8',
         };
         spawnSync('git', ['pull'], {
             ...options,
             maxBuffer: 1024 * 1024 * 100,
         });
-        console.log('execute pull');
+        log('execute pull');
         execSync('git add .', options);
-        console.log('added files');
+        log('added files');
         const commitMessage = `[jasbob-leetcode-bot] automated upload of <${difficulty}> ${titleWithSuffix}`;
         execSync(`git commit -m '${commitMessage}'`, options);
-        console.log('committed files');
+        log('committed files');
         const execOutput = spawnSync('git', ['push'], {
             ...options,
             maxBuffer: 1024 * 1024 * 100,
         });
         const output = execOutput.output.join(' ');
-        console.log('pushed files');
-        console.log(`output from git push: %${output}%`);
+        log('pushed files');
+        log(`output from git push: %${output}%`);
         const commit = extractLatestCommit(output);
-        console.log('commit', commit);
+        log('commit', commit);
         const url_ending = commit ? `commit/${commit}` : '';
-        const data = {
-            embeds: [
-                {
-                    color: 'Green',
-                    fields: [
-                        {
-                            name: `[jasbob-leetcode-bot] Automated Upload Triggered!`,
-                            value: `Uploaded <${difficulty}> ${titleWithSuffix} [(here)](https://github.com/jason-tung/leetcode/${url_ending})`,
+        const docRef = db.collection('leetcode_actions').doc();
+        const splitName = formattedTitle.split('-');
+        const problemNumber = splitName[0];
+        const problemName = splitName
+            .slice(1)
+            .join(' ')
+            .replace(/^\w|\s\w/g, (x) => x.toUpperCase());
+        (async () => {
+            await docRef.set({
+                formattedTitle,
+                problemNumber,
+                problemName,
+                suffix,
+                url,
+                action: suffix.length > 0 ? 'write_sol' : 'write_alt_sol',
+                rewrite: fileExists,
+                timestamp: new Date(),
+            });
+            const data = {
+                embeds: [
+                    {
+                        color: 'Green',
+                        fields: [
+                            {
+                                name: `[jasbob-leetcode-bot] Automated Upload Triggered!`,
+                                value: `Uploaded <${difficulty}> ${titleWithSuffix} [(here)](https://github.com/jason-tung/leetcode/${url_ending})`,
+                            },
+                        ],
+                        thumbnail: {
+                            url: `http://jasontung.me:3001/randomimage?key=${Math.random()}`,
                         },
-                    ],
-                    thumbnail: {
-                        url: `http://jasontung.me:3001/randomimage?key=${Math.random()}`,
+                        footer: {
+                            text: `powered by jasbob-bot ・ ${getCurrentTime()}`,
+                            icon_url:
+                                'https://avatars.githubusercontent.com/u/153464167?v=4',
+                        },
                     },
-                    footer: {
-                        text: `powered by jasbob-bot ・ ${getCurrentTime()}`,
-                        icon_url:
-                            'https://avatars.githubusercontent.com/u/153464167?v=4',
-                    },
+                ],
+            };
+            fetch(process.env.WEBHOOK, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
                 },
-            ],
-        };
-        fetch(process.env.WEBHOOK, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data),
-        });
-        console.log('omg we uploaded!?!');
-        res.status(200).send(`${titleWithSuffix}`);
+                body: JSON.stringify(data),
+            });
+            console.log('finished upload', titleWithSuffix, commit);
+            res.status(200).send(`${titleWithSuffix}`);
+        })();
     } catch (err) {
         console.error('Error writing file:', err);
+
         res.status(500).send('Error executing command');
     }
 });
