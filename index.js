@@ -152,7 +152,7 @@ app.post('/updateGithub', authenticate, (req, res) => {
             const data = {
                 embeds: [
                     {
-                        color: 'Green',
+                        color: '2484902',
                         fields: [
                             {
                                 name: `[jasbob-leetcode-bot] Automated Upload Triggered!`,
