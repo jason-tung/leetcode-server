@@ -145,6 +145,10 @@ app.post('/updateGithub', authenticate, (req, res) => {
                 rewrite: fileExists,
                 timestamp: new Date(),
             });
+
+            const collectionRef = db.collection('leetcode_actions');
+            const snapshot = await collectionRef.count().get();
+            const cnt = snapshot.data().count;
             const data = {
                 embeds: [
                     {
@@ -152,7 +156,9 @@ app.post('/updateGithub', authenticate, (req, res) => {
                         fields: [
                             {
                                 name: `[jasbob-leetcode-bot] Automated Upload Triggered!`,
-                                value: `Uploaded <${difficulty}> ${titleWithSuffix} [(here)](https://github.com/jason-tung/leetcode/${url_ending})`,
+                                value: `Uploaded <${difficulty}> ${titleWithSuffix} [(here)](https://github.com/jason-tung/leetcode/${url_ending})
+                                Total entries stored: ${cnt};
+                                `,
                             },
                         ],
                         thumbnail: {
