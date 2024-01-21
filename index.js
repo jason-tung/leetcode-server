@@ -157,7 +157,8 @@ app.post('/updateGithub', authenticate, (req, res) => {
                             {
                                 name: `[jasbob-leetcode-bot] Automated Upload Triggered!`,
                                 value: `Uploaded <${difficulty}> ${titleWithSuffix} [(here)](https://github.com/jason-tung/leetcode/${url_ending})
-                                Total entries stored: ${cnt};
+                                
+                                Total entries stored: ${cnt}
                                 `,
                             },
                         ],
