@@ -149,6 +149,16 @@ app.post('/updateGithub', authenticate, (req, res) => {
             const collectionRef = db.collection('leetcode_actions');
             const snapshot = await collectionRef.count().get();
             const cnt = snapshot.data().count;
+            const uniqueValuesSet = new Set();
+            const collectionSnapshot = await collectionRef.get();
+            collectionSnapshot.forEach((doc) => {
+                // Access the field value and add it to the Set
+                const fieldValue = doc.data()['problemNumber'];
+                if (fieldValue == undefined) {
+                    console.log(doc.id);
+                }
+                uniqueValuesSet.add(fieldValue);
+            });
             const data = {
                 embeds: [
                     {
@@ -157,8 +167,9 @@ app.post('/updateGithub', authenticate, (req, res) => {
                             {
                                 name: `[jasbob-leetcode-bot] Automated Upload Triggered!`,
                                 value: `Uploaded <${difficulty}> ${titleWithSuffix} [(here)](https://github.com/jason-tung/leetcode/${url_ending})
-                                
+
                                 Total entries stored: ${cnt}
+                                Unique problems solved: ${uniqueValuesSet.size}
                                 `,
                             },
                         ],
