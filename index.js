@@ -94,6 +94,7 @@ app.post('/updateGithub', authenticate, (req, res) => {
     // check the title looks right
     if (/[^a-zA-Z0-9\-]/.test(titleWithSuffix)) {
         res.status(501).send('Bad title');
+        return;
     }
     let basePath = homeDir;
     if (process.env.WORKDIR) {
