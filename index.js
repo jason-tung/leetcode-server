@@ -91,6 +91,10 @@ app.post('/updateGithub', authenticate, (req, res) => {
     const { difficulty, formattedTitle, suffix, fileText, url } = req.body;
     const titleWithSuffix =
         suffix.length > 0 ? `${formattedTitle}-${suffix}` : formattedTitle;
+    // check the title looks right
+    if (/[^a-zA-Z0-9\-]/.test(titleWithSuffix)) {
+        res.status(501).send('Bad title');
+    }
     let basePath = homeDir;
     if (process.env.WORKDIR) {
         basePath = path.join(homeDir, process.env.WORKDIR);
