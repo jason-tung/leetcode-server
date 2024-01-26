@@ -139,17 +139,19 @@ app.post('/updateGithub', authenticate, (req, res) => {
             .join(' ')
             .replace(/^\w|\s\w/g, (x) => x.toUpperCase());
         (async () => {
-            await docRef.set({
-                formattedTitle,
-                problemNumber,
-                problemName,
-                suffix,
-                url,
-                difficulty,
-                action: suffix.length > 0 ? 'write_alt_sol' : 'write_sol',
-                rewrite: fileExists,
-                timestamp: new Date(),
-            });
+            if (!formattedTitle.startsWith('99999')) {
+                await docRef.set({
+                    formattedTitle,
+                    problemNumber,
+                    problemName,
+                    suffix,
+                    url,
+                    difficulty,
+                    action: suffix.length > 0 ? 'write_alt_sol' : 'write_sol',
+                    rewrite: fileExists,
+                    timestamp: new Date(),
+                });
+            }
 
             const collectionRef = db.collection('leetcode_actions');
             const snapshot = await collectionRef.count().get();
@@ -162,7 +164,9 @@ app.post('/updateGithub', authenticate, (req, res) => {
                 if (fieldValue == undefined) {
                     console.log(doc.id);
                 }
-                uniqueValuesSet.add(fieldValue);
+                if (fieldValue != '99999') {
+                    uniqueValuesSet.add(fieldValue);
+                }
             });
             const data = {
                 embeds: [
