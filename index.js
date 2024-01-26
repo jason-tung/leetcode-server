@@ -151,6 +151,8 @@ app.post('/updateGithub', authenticate, (req, res) => {
                     rewrite: fileExists,
                     timestamp: new Date(),
                 });
+            } else {
+                console.log('test case... skipping upload');
             }
 
             const collectionRef = db.collection('leetcode_actions');
