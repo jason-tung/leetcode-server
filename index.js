@@ -203,7 +203,9 @@ app.post('/updateGithub', authenticate, (req, res) => {
                 body: JSON.stringify(data),
             });
             console.log('finished upload', titleWithSuffix, commit);
-            res.status(200).send(`${titleWithSuffix}`);
+            res.status(200).send(
+                `https://github.com/jason-tung/leetcode/${url_ending}`
+            );
         })();
     } catch (err) {
         console.error('Error writing file:', err);
